@@ -52,7 +52,7 @@ public class Modules {
       @*/
      void ttcCalculation(TTCCalculation_state state) {
         int headaway = 0;
-        headaway = state.mioDistance - headaway;
+        headaway = state.mioDistance - headaway; //weird but ok
         int abs = state.mioVelocity < 0 ? -(state.mioVelocity) : state.mioVelocity;
         int clamped = clamp(10, abs, 150);
         int ttc = 128 * headaway / clamped;
@@ -79,33 +79,37 @@ public class Modules {
     void stoppingTimeCalculation(StoppingTimeCalculation_state state) {
         state.FBStoppingTime = state.egoVelocity / state.FBdecel;
         state.PB1StoppingTime = state.egoVelocity / state.FB1decel;
-        state.PB2StoppingTime = state.egoVelocity / state.FB2decel; //???  PB1StoppingTime to PB2StoppingTime
+        state.PB2StoppingTime = state.egoVelocity / state.FB2decel; //  PB1StoppingTime to PB2StoppingTime
         state.FCWStoppingTime = state.FBStoppingTime + reactTime;
     }
 
-    final int M_DEFAULT = 0, M_FCW = 1, M_PARTIAL_BREAKING_1 = 2,
-            M_PARTIAL_BREAKING_2 = 3, M_FULL_BREAKING = 4;
+    static final int M_DEFAULT = 0;
+    static final int M_FCW = 1;
+    static final int M_PARTIAL_BREAKING_1 = 2;
+    static final int M_PARTIAL_BREAKING_2 = 3;
+    static final int M_FULL_BREAKING = 4;
 
     /*@ public normal_behavior
-      @ requires s != null && s.ttc != null && (s.mode == 0 || s.mode == 1 || s.mode == 2 || s.mode == 3 || s.mode == 4);
+      @ requires s != null && s.ttc != null && (s.mode == M_DEFAULT || s.mode == M_FCW ||
+      @                        s.mode == M_PARTIAL_BREAKING_1 || s.mode == M_PARTIAL_BREAKING_2 || s.mode == M_FULL_BREAKING);
       @ assignable s.mode, s.aebStatus, s.fcwActivate, s.decel;
-      @ ensures \old(s.mode) == 0 ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 0;
-      @ ensures \old(s.mode) == 0 && abs(s.ttc) < s.fcwTime && s.ttc < 0 ==> s.mode == M_FCW;
-      @ ensures \old(s.mode) == 1 ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 1;
-      @ ensures \old(s.mode) == 1 && abs(s.ttc) < s.pb1Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_1;
-      @ ensures \old(s.mode) == 1 && abs(s.ttc) >= s.pb1Time && abs(s.ttc) < (10 * s.fcwTime) / 12 && s.ttc < 0 ==> s.mode == M_DEFAULT;
-      @ ensures \old(s.mode) == 2 ==> s.decel == s.pb1Decel && s.aebStatus == 1 && s.fcwActivate == 1;
-      @ ensures \old(s.mode) == 2 && abs(s.ttc) < s.pb2Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_2;
-      @ ensures \old(s.mode) == 2 && (abs(s.ttc) >= s.pb2Time || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
-      @ ensures \old(s.mode) == 3 ==> s.decel == s.pb2Decel && s.aebStatus == 2 && s.fcwActivate == 1;
-      @ ensures \old(s.mode) == 3 && abs(s.ttc) < s.fbTime && s.ttc < 0 ==> s.mode == M_FULL_BREAKING;
-      @ ensures \old(s.mode) == 3 && (abs(s.ttc) >= s.fbTime || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
-      @ ensures \old(s.mode) == 4 ==> s.decel == s.fbDecel && s.aebStatus == 3 && s.fcwActivate == 1;
-      @ ensures \old(s.mode) == 4 && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_DEFAULT ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 0;
+      @ ensures \old(s.mode) == M_DEFAULT && abs(s.ttc) < s.fcwTime && s.ttc < 0 ==> s.mode == M_FCW;
+      @ ensures \old(s.mode) == M_FCW ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 1;
+      @ ensures \old(s.mode) == M_FCW && abs(s.ttc) < s.pb1Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_1;
+      @ ensures \old(s.mode) == M_FCW && abs(s.ttc) >= s.pb1Time && abs(s.ttc) < (10 * s.fcwTime) / 12 && s.ttc < 0 ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 ==> s.decel == s.pb1Decel && s.aebStatus == 1 && s.fcwActivate == 1;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 && abs(s.ttc) < s.pb2Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_2;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 && (abs(s.ttc) >= s.pb2Time || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 ==> s.decel == s.pb2Decel && s.aebStatus == 2 && s.fcwActivate == 1;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 && abs(s.ttc) < s.fbTime && s.ttc < 0 ==> s.mode == M_FULL_BREAKING;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 && (abs(s.ttc) >= s.fbTime || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_FULL_BREAKING ==> s.decel == s.fbDecel && s.aebStatus == 3 && s.fcwActivate == 1;
+      @ ensures \old(s.mode) == M_FULL_BREAKING && s.stop ==> s.mode == M_DEFAULT;
       @*/
     void aebLogic(AEBLogic_state s) {
         switch (s.mode){
-            case 0://M_DEFAULT
+            case M_DEFAULT:
                 s.aebStatus = 0;
                 s.fcwActivate = 0;
                 s.decel = 0;
@@ -115,7 +119,7 @@ public class Modules {
                 }
 
                 break;
-            case 1://M_FCW
+            case M_FCW:
                 s.aebStatus = 0;
                 s.fcwActivate = 1;
                 s.decel = 0;
@@ -126,7 +130,7 @@ public class Modules {
                     s.mode = M_DEFAULT;
                 }
                 break;
-            case 2://M_PARTIAL_BREAKING_1
+            case M_PARTIAL_BREAKING_1:
                 s.aebStatus = 1;
                 s.fcwActivate = 1;
                 s.decel = s.pb1Decel;
@@ -138,7 +142,7 @@ public class Modules {
                     s.mode = M_DEFAULT;
                 }
                 break;
-            case 3://M_PARTIAL_BREAKING_2
+            case M_PARTIAL_BREAKING_2:
                 s.aebStatus = 2;
                 s.fcwActivate = 1;
                 s.decel = s.pb2Decel;
@@ -150,7 +154,7 @@ public class Modules {
                     s.mode = M_DEFAULT;
                 }
                 break;
-            case 4://M_FULL_BREAKING
+            case M_FULL_BREAKING:
                 s.aebStatus = 3;
                 s.fcwActivate = 1;
                 s.decel = s.fbDecel;
@@ -174,7 +178,7 @@ public class Modules {
     /*@ public normal_behaviour
       @ requires mioDistance != null && mioVelocity != null && egoVelocity != null && mioVelocity != 0 &&
                         AEB_PB1_decel != 0 && AEB_PB2_decel != 0 && AEB_FB_decel != 0 && ttc_state != null && stc_state != null && aeb_state != null && cycleResult != null &&
-                        ttc_state.ttc != null && (aeb_state.mode == 0 || aeb_state.mode == 1 || aeb_state.mode == 2 || aeb_state.mode == 3 || aeb_state.mode == 4) && aeb_state.ttc != null;
+                        ttc_state.ttc != null && (aeb_state.mode == M_DEFAULT || aeb_state.mode == M_FCW || aeb_state.mode == M_PARTIAL_BREAKING_1 || aeb_state.mode == M_PARTIAL_BREAKING_2 || aeb_state.mode == M_FULL_BREAKING) && aeb_state.ttc != null;
       @ assignable cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
                         , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
                         , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime
@@ -241,7 +245,7 @@ public class Modules {
 
     /*@ public normal_behaviour
       @ requires random.\inv && random != null && this.nondet_int() != null && this.nondet_int() != 0 && AEB_PB1_decel != 0 && AEB_PB2_decel != 0 && AEB_FB_decel != 0 && ttc_state != null && stc_state != null && aeb_state != null && cycleResult != null &&
-                        ttc_state.ttc != null && (aeb_state.mode == 0 || aeb_state.mode == 1 || aeb_state.mode == 2 || aeb_state.mode == 3 || aeb_state.mode == 4) && aeb_state.ttc != null;
+                        ttc_state.ttc != null && (aeb_state.mode == M_DEFAULT || aeb_state.mode == M_FCW || aeb_state.mode == M_PARTIAL_BREAKING_1 || aeb_state.mode == M_PARTIAL_BREAKING_2 || aeb_state.mode == M_FULL_BREAKING) && aeb_state.ttc != null;
       @ assignable random.previous, cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
                         , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
                         , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime

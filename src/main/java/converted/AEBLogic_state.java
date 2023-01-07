@@ -8,4 +8,11 @@ public class AEBLogic_state {
     int fcwActivate, decel, aebStatus;
     //State
     int mode;
+
+    /*@
+      @ ensures mode == Modules.M_DEFAULT;
+      @*/
+    public AEBLogic_state() {
+        this.mode = Modules.M_DEFAULT;
+    }
 }
