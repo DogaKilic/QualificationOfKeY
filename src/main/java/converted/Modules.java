@@ -234,7 +234,8 @@ public class Modules {
     /*@ public normal_behaviour
       @ requires random.\inv && random != null;
       @ assignable random.previous;
-      @ ensures \result != null && \result != 0 && \result > 0;
+      @ ensures \result != null && \result != 0;
+      @ ensures random.\inv;
       @*/
     public int nondet_int() {return random.rand();}
 
@@ -249,16 +250,26 @@ public class Modules {
                         , aeb_state.mode, aeb_state.aebStatus, aeb_state.fcwActivate, aeb_state.decel
                         , cycleResult.fcwActivate, cycleResult.aebStatus, cycleResult.decelaration;
       @ ensures true;
+      @ diverges true;
       @*/
-    public void main(String[] args) {
+    public void main() {
+        int dist;
+        int velo1;
+        int velo2;
         /*@ loop_invariant
           @ true;
-          @ assignable \nothing;
+          @ assignable random.previous, cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
+                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
+                        , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime
+                        , aeb_state.ttc, aeb_state.fcwTime, aeb_state.pb1Time, aeb_state.pb2Time, aeb_state.fbTime, aeb_state.pb1Decel
+                        , aeb_state.pb2Decel, aeb_state.fbDecel, cycleResult.egoCarStop, aeb_state.stop
+                        , aeb_state.mode, aeb_state.aebStatus, aeb_state.fcwActivate, aeb_state.decel
+                        , cycleResult.fcwActivate, cycleResult.aebStatus, cycleResult.decelaration;
           @*/
         while (true) {
-            int dist = nondet_int();
-            int velo1 = nondet_int();
-            int velo2 = nondet_int();
+            dist = nondet_int();
+            velo1 = nondet_int();
+            velo2 = nondet_int();
             cycle(dist, velo1, velo2);
         }
     }

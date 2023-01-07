@@ -25,6 +25,7 @@ public class RandomGen {
       @ ensures (int)((a * \old(previous) + c) % 32749) == 0 ==> \result == 1;
       @ ensures \result != 0;
       @ ensures previous >= 0;
+      @ ensures this.\inv;
       @*/
     int rand() {
         long r = (a * previous + c) % 32749;
