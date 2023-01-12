@@ -47,7 +47,7 @@ public final class TTCCalculation_state {
       @ ensures this.mioVelocity < 0 ==> this.ttc == -((this.mioDistance - this.headwayOffset) / clamp(10, -this.mioVelocity, 150));
       @ ensures this.mioVelocity >= 0 ==> this.ttc == (this.mioDistance - this.headwayOffset) / clamp(10, this.mioVelocity, 150);
       @ ensures 10 * (this.mioDistance - this.headwayOffset) < 1 ==> this.collision == true;
-      @ ensures 10 * (this.mioDistance - this.headwayOffsetmi) >= 1 ==> this.collision == false;
+      @ ensures 10 * (this.mioDistance - this.headwayOffset) >= 1 ==> this.collision == false;
       @ ensures this.\inv;
       @*/
     void ttcCalculation() {

@@ -3,7 +3,7 @@ package converted;
 public class Modules {
     //globals
 
-    int reactTime = 2;
+
 
     /*@ public normal_behaviour
       @ requires true;
@@ -15,20 +15,6 @@ public class Modules {
         return (x < 0) ? -x : x;
     }
 
-    /*@ public normal_behavior
-      @ requires state != null && state.FB1decel != 0 && state.FBdecel != 0 && state.FB2decel != 0;
-      @ assignable state.FBStoppingTime, state.PB1StoppingTime, state.PB2StoppingTime, state.FCWStoppingTime;
-      @ ensures state.FBStoppingTime == state.egoVelocity / state.FBdecel;
-      @ ensures state.PB1StoppingTime == state.egoVelocity / state.FB1decel;
-      @ ensures state.PB2StoppingTime == state.egoVelocity / state.FB2decel;
-      @ ensures state.FCWStoppingTime == state.FBStoppingTime + reactTime;
-      @*/
-    void stoppingTimeCalculation(StoppingTimeCalculation_state state) {
-        state.FBStoppingTime = state.egoVelocity / state.FBdecel;
-        state.PB1StoppingTime = state.egoVelocity / state.FB1decel;
-        state.PB2StoppingTime = state.egoVelocity / state.FB2decel; //  PB1StoppingTime to PB2StoppingTime
-        state.FCWStoppingTime = state.FBStoppingTime + reactTime;
-    }
 
     static final int M_DEFAULT = 0;
     static final int M_FCW = 1;
@@ -167,7 +153,7 @@ public class Modules {
         stc_state.FB1decel = AEB_PB1_decel;
         stc_state.FB2decel = AEB_PB2_decel;
         stc_state.FBdecel = AEB_FB_decel;
-        stoppingTimeCalculation(stc_state);
+        //stoppingTimeCalculation(stc_state);
 
         aeb_state.ttc = ttc_state.ttc;
         aeb_state.fcwTime = stc_state.FCWStoppingTime;
