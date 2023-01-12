@@ -5,17 +5,15 @@ public class Modules {
     int headawayOffset = 3;
     int reactTime = 2;
 
-    /*@   public invariant
-      @    headawayOffset > 0 && reactTime > 0;
-      @*/
-
     /*@ public normal_behaviour
       @ requires true;
-      @ ensures x < 0 ==> \result == - \old(x);
-      @ ensures x >= 0 ==> \result == \old(x);
-      @ assignable x;
+      @ ensures x < 0 ==> \result == - x;
+      @ ensures x >= 0 ==> \result == x;
+      @ assignable \nothing;
       @*/
-    int abs(int x) { return x < 0 ? -x : x;}
+    int /*@ strictly_pure helper @*/ abs(int x) {
+        return (x < 0) ? -x : x;
+    }
     /*@ public normal_behaviour
       @ requires true;
       @ ensures x < y ==> \result == x;
@@ -95,17 +93,24 @@ public class Modules {
       @ assignable s.mode, s.aebStatus, s.fcwActivate, s.decel;
       @ ensures \old(s.mode) == M_DEFAULT ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 0;
       @ ensures \old(s.mode) == M_DEFAULT && abs(s.ttc) < s.fcwTime && s.ttc < 0 ==> s.mode == M_FCW;
+      @ ensures \old(s.mode) == M_DEFAULT && !(abs(s.ttc) < s.fcwTime && s.ttc < 0) ==> s.mode == M_DEFAULT;
       @ ensures \old(s.mode) == M_FCW ==> s.decel == 0 && s.aebStatus == 0 && s.fcwActivate == 1;
       @ ensures \old(s.mode) == M_FCW && abs(s.ttc) < s.pb1Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_1;
       @ ensures \old(s.mode) == M_FCW && abs(s.ttc) >= s.pb1Time && abs(s.ttc) < (10 * s.fcwTime) / 12 && s.ttc < 0 ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_FCW && !(abs(s.ttc) < s.pb1Time && s.ttc < 0) && !(abs(s.ttc) >= s.pb1Time && abs(s.ttc) < (10 * s.fcwTime) / 12 && s.ttc < 0) ==> s.mode == M_FCW;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 ==> s.decel == s.pb1Decel && s.aebStatus == 1 && s.fcwActivate == 1;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 && abs(s.ttc) < s.pb2Time && s.ttc < 0 ==> s.mode == M_PARTIAL_BREAKING_2;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 && (abs(s.ttc) >= s.pb2Time || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_1 && !(abs(s.ttc) < s.pb2Time && s.ttc < 0) && !((abs(s.ttc) >= s.pb2Time || s.ttc >= 0) && s.stop) ==> s.mode == M_PARTIAL_BREAKING_1;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 ==> s.decel == s.pb2Decel && s.aebStatus == 2 && s.fcwActivate == 1;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 && abs(s.ttc) < s.fbTime && s.ttc < 0 ==> s.mode == M_FULL_BREAKING;
       @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 && (abs(s.ttc) >= s.fbTime || s.ttc >= 0) && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_PARTIAL_BREAKING_2 && !(abs(s.ttc) < s.fbTime && s.ttc < 0) && !((abs(s.ttc) >= s.fbTime || s.ttc >= 0) && s.stop) ==> s.mode == M_PARTIAL_BREAKING_2;
       @ ensures \old(s.mode) == M_FULL_BREAKING ==> s.decel == s.fbDecel && s.aebStatus == 3 && s.fcwActivate == 1;
       @ ensures \old(s.mode) == M_FULL_BREAKING && s.stop ==> s.mode == M_DEFAULT;
+      @ ensures \old(s.mode) == M_FULL_BREAKING && !(s.stop) ==> s.mode == M_FULL_BREAKING;
+      @ ensures (s.mode == Modules.M_DEFAULT || s.mode == Modules.M_FCW || s.mode == Modules.M_PARTIAL_BREAKING_1 || s.mode == Modules.M_PARTIAL_BREAKING_2 || s.mode == Modules.M_FULL_BREAKING);
+      @ //ensures s.\inv;
       @*/
     void aebLogic(AEBLogic_state s) {
         switch (s.mode){
