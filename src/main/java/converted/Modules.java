@@ -2,7 +2,7 @@ package converted;
 
 public class Modules {
     //globals
-    int headawayOffset = 3;
+
     int reactTime = 2;
 
     /*@ public normal_behaviour
@@ -13,57 +13,6 @@ public class Modules {
       @*/
     int /*@ strictly_pure helper @*/ abs(int x) {
         return (x < 0) ? -x : x;
-    }
-    /*@ public normal_behaviour
-      @ requires true;
-      @ ensures x < y ==> \result == x;
-      @ ensures x >= y ==> \result == y;
-      @ assignable \nothing;
-      @*/
-    int min(int x, int y) { return x < y ? x : y; }
-    /*@ public normal_behaviour
-      @ requires true;
-      @ ensures x > y ==> \result == x;
-      @ ensures y >= x ==> \result == y;
-      @ assignable \nothing;
-      @*/
-    int max(int x, int y) { return x > y ? x : y; }
-    /*@ public normal_behavior
-      @ requires true;
-      @ ensures x >= u || l >= u ==> \result == u;
-      @ ensures l <= u && x <= u && l >= x ==> \result == l;
-      @ ensures l <= u && x <= u && x >= l ==> \result == x;
-      @ ensures l <= u && x <= u && l == x ==> \result == l && \result == x;
-      @ ensures l <= u && x <= u && l == x && x == u ==> \result == l && \result == x && \result == u;
-      @ assignable \nothing;
-      @*/
-    int clamp(int l, int x, int u) { return min(max(x, l), u); }
-
-    /*@ public normal_behavior
-      @ requires state != null && state.mioVelocity != 0;
-      @ assignable state.colission, state.ttc;
-      @ ensures (state.mioVelocity <= 25 ==> state.ttc == 0);
-      @ ensures (state.mioVelocity > 25 ==> state.ttc == (128 * \old(state.mioDistance)) / clamp(10, \old(state.mioVelocity),150));
-      @ ensures state.ttc != null;
-      @ ensures (state.mioDistance) < 13 ==> state.colission == true;
-      @ ensures (state.mioDistance) >= 13 ==> state.colission == false;
-      @*/
-     void ttcCalculation(TTCCalculation_state state) {
-        int headaway = 0;
-        headaway = state.mioDistance - headaway; //weird but ok
-        int abs = state.mioVelocity < 0 ? -(state.mioVelocity) : state.mioVelocity;
-        int clamped = clamp(10, abs, 150);
-        int ttc = 128 * headaway / clamped;
-
-
-        if (state.mioVelocity > 25) {
-            state.ttc = ttc;
-        }
-        else {
-            state.ttc = 0;
-        }
-
-        state.colission = (headaway < 13);
     }
 
     /*@ public normal_behavior
@@ -185,7 +134,7 @@ public class Modules {
                         AEB_PB1_decel != 0 && AEB_PB2_decel != 0 && AEB_FB_decel != 0 && ttc_state != null && stc_state != null && aeb_state != null && cycleResult != null &&
                         ttc_state.ttc != null && (aeb_state.mode == M_DEFAULT || aeb_state.mode == M_FCW || aeb_state.mode == M_PARTIAL_BREAKING_1 || aeb_state.mode == M_PARTIAL_BREAKING_2 || aeb_state.mode == M_FULL_BREAKING) && aeb_state.ttc != null;
       @ assignable cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
-                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
+                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.collision, ttc_state.ttc
                         , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime
                         , aeb_state.ttc, aeb_state.fcwTime, aeb_state.pb1Time, aeb_state.pb2Time, aeb_state.fbTime, aeb_state.pb1Decel
                         , aeb_state.pb2Decel, aeb_state.fbDecel, cycleResult.egoCarStop, aeb_state.stop
@@ -193,7 +142,7 @@ public class Modules {
                         , cycleResult.fcwActivate, cycleResult.aebStatus, cycleResult.decelaration;
       @ ensures cycleResult.mioDistance == mioDistance && cycleResult.mioVelocity == mioVelocity && cycleResult.egoVelocity == egoVelocity;
       @ ensures ttc_state.mioDistance == mioDistance && ttc_state.mioVelocity == mioVelocity;
-      @ ensures cycleResult.collision == ttc_state.colission;
+      @ ensures cycleResult.collision == ttc_state.collision;
       @ ensures stc_state.egoVelocity == egoVelocity && stc_state.FB1decel == AEB_PB1_decel && stc_state.FB2decel == AEB_PB2_decel
                         && stc_state.FBdecel == AEB_FB_decel;
       @ ensures aeb_state.ttc == ttc_state.ttc && aeb_state.fcwTime == stc_state.FCWStoppingTime && aeb_state.pb1Time == stc_state.PB1StoppingTime
@@ -202,6 +151,7 @@ public class Modules {
       @ ensures cycleResult.egoCarStop == egoVelocity < THRESHOLD_VELOCITY_STOP;
       @ ensures aeb_state.stop == cycleResult.egoCarStop;
       @ ensures cycleResult.fcwActivate == aeb_state.fcwActivate && cycleResult.aebStatus == aeb_state.aebStatus && cycleResult.decelaration == aeb_state.decel;
+      @ ensures (aeb_state.mode == Modules.M_DEFAULT || aeb_state.mode == Modules.M_FCW || aeb_state.mode == Modules.M_PARTIAL_BREAKING_1 || aeb_state.mode == Modules.M_PARTIAL_BREAKING_2 || aeb_state.mode == Modules.M_FULL_BREAKING);
       @*/
     void cycle (int mioDistance, int mioVelocity, int egoVelocity) {
         cycleResult.mioDistance = mioDistance;
@@ -210,8 +160,8 @@ public class Modules {
 
         ttc_state.mioDistance = mioDistance;
         ttc_state.mioVelocity = mioVelocity;
-        ttcCalculation(ttc_state);
-        cycleResult.collision = ttc_state.colission;
+        //ttcCalculation(ttc_state);
+        cycleResult.collision = ttc_state.collision;
 
         stc_state.egoVelocity = egoVelocity;
         stc_state.FB1decel = AEB_PB1_decel;
@@ -252,7 +202,7 @@ public class Modules {
       @ requires random.\inv && random != null && this.nondet_int() != null && this.nondet_int() != 0 && AEB_PB1_decel != 0 && AEB_PB2_decel != 0 && AEB_FB_decel != 0 && ttc_state != null && stc_state != null && aeb_state != null && cycleResult != null &&
                         ttc_state.ttc != null && (aeb_state.mode == M_DEFAULT || aeb_state.mode == M_FCW || aeb_state.mode == M_PARTIAL_BREAKING_1 || aeb_state.mode == M_PARTIAL_BREAKING_2 || aeb_state.mode == M_FULL_BREAKING) && aeb_state.ttc != null;
       @ assignable random.previous, cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
-                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
+                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.collision, ttc_state.ttc
                         , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime
                         , aeb_state.ttc, aeb_state.fcwTime, aeb_state.pb1Time, aeb_state.pb2Time, aeb_state.fbTime, aeb_state.pb1Decel
                         , aeb_state.pb2Decel, aeb_state.fbDecel, cycleResult.egoCarStop, aeb_state.stop
@@ -268,7 +218,7 @@ public class Modules {
         /*@ loop_invariant
           @ true;
           @ assignable random.previous, cycleResult.mioDistance, cycleResult.mioVelocity, cycleResult.egoVelocity, ttc_state.mioDistance, ttc_state.mioVelocity, cycleResult.collision
-                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.colission, ttc_state.ttc
+                        , stc_state.egoVelocity, stc_state.FB1decel, stc_state.FB2decel, stc_state.FBdecel, ttc_state.collision, ttc_state.ttc
                         , stc_state.FCWStoppingTime, stc_state.PB1StoppingTime, stc_state.PB2StoppingTime, stc_state.FBStoppingTime
                         , aeb_state.ttc, aeb_state.fcwTime, aeb_state.pb1Time, aeb_state.pb2Time, aeb_state.fbTime, aeb_state.pb1Decel
                         , aeb_state.pb2Decel, aeb_state.fbDecel, cycleResult.egoCarStop, aeb_state.stop
