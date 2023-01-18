@@ -9,16 +9,16 @@ public final class AEBLogic_state {
     //State
     int mode;
 
-    private final int M_DEFAULT = 0;
-    private final int M_FCW = 1;
-    private final int M_PARTIAL_BREAKING_1 = 2;
-    private final int M_PARTIAL_BREAKING_2 = 3;
-    private final int M_FULL_BREAKING = 4;
+    final int M_DEFAULT = 0;
+    final int M_FCW = 1;
+    final int M_PARTIAL_BREAKING_1 = 2;
+    final int M_PARTIAL_BREAKING_2 = 3;
+    final int M_FULL_BREAKING = 4;
 
     /*@ public invariant
       @ M_DEFAULT == 0 && M_FCW == 1 && M_PARTIAL_BREAKING_1 == 2 && M_PARTIAL_BREAKING_2 == 3 && M_FULL_BREAKING == 4 &&
       @     (this.mode == M_DEFAULT || this.mode == M_FCW || this.mode == M_PARTIAL_BREAKING_1 || this.mode == M_PARTIAL_BREAKING_2
-      @     || this.mode == M_FULL_BREAKING);
+      @     || this.mode == M_FULL_BREAKING) && this != null;
       @*/
 
     /*@
@@ -34,14 +34,15 @@ public final class AEBLogic_state {
       @ requires true;
       @ ensures x < 0 ==> \result == - x;
       @ ensures x >= 0 ==> \result == x;
+      @ ensures this.\inv;
       @ assignable \nothing;
       @*/
-    private int /*@ strictly_pure helper @*/ abs(int x) {
+    private int /*@ strictly_pure @*/ abs(int x) {
         return (x < 0) ? -x : x;
     }
 
     /*@ public normal_behavior
-      @ requires true;
+      @ requires this.\inv;
       @ assignable this.mode, this.aebStatus, this.fcwActivate, this.decel;
       @ ensures \old(this.mode) == M_DEFAULT ==> this.decel == 0 && this.aebStatus == 0 && this.fcwActivate == 0;
       @ ensures \old(this.mode) == M_DEFAULT && abs(this.ttc) < this.fcwTime && this.ttc < 0 ==> this.mode == M_FCW;
