@@ -3,11 +3,11 @@ package converted;
 public final class TTCCalculation_state {
 
     //Inputs
-    int mioDistance;
-    int mioVelocity;
+    int mioDistance;  //relative distance
+    int mioVelocity;  // relative velocity
     //Outputs
-    boolean collision;
-    int ttc;
+    boolean collision; // have the vehicles collided
+    int ttc; // not actually time to collapse abs(ttc) is actual time to collapse when ttc < 0 because it's calculated from relative velo and dist
 
     private int headwayOffset = 3;
 
@@ -30,13 +30,10 @@ public final class TTCCalculation_state {
       @*/
     private int /*@ stricty_pure @*/ max(int x, int y) { return x > y ? x : y; }
     /*@ public normal_behavior
-      @ requires true;
-      @ ensures x >= u || l >= u ==> \result == u;
-      @ ensures l <= u && x <= u && l >= x ==> \result == l;
-      @ ensures l <= u && x <= u && x >= l ==> \result == x;
-      @ ensures l <= u && x <= u && l == x ==> \result == l && \result == x;
-      @ ensures l <= u && x <= u && l == x && x == u ==> \result == l && \result == x && \result == u;
-      @ ensures (\result >= l && \result <= u) || (\result <= l && \result >= u);
+      @ requires l <= u;
+      @ ensures x <= l ==> \result == l;
+      @ ensures x >= u ==> \result == u;
+      @ ensures l <= x <= u ==> \result == x;
       @ ensures this.\inv;
       @ assignable \nothing;
       @*/
@@ -45,18 +42,16 @@ public final class TTCCalculation_state {
     /*@ public normal_behavior
       @ requires this.\inv;
       @ assignable this.collision, this.ttc;
-      @ ensures this.mioVelocity < 0 && (this.mioDistance - headwayOffset) >= 0 ==> this.ttc == -((this.mioDistance - this.headwayOffset) / clamp(10, -this.mioVelocity, 150));
-      @ ensures this.mioVelocity >= 0 && (this.mioDistance - headwayOffset) >= 0 ==> this.ttc == (this.mioDistance - this.headwayOffset) / clamp(10, this.mioVelocity, 150);
-      @ ensures (this.mioDistance - headwayOffset) < 0 ==> this.ttc == 0;
-      @ ensures 10 * (this.mioDistance - this.headwayOffset) < 1 ==> this.collision == true;
-      @ ensures 10 * (this.mioDistance - this.headwayOffset) >= 1 ==> this.collision == false;
+      @ ensures collision == 10 * (mioDistance - 3) < 1 ? true : false;
+      @ ensures mioVelocity >= 0 ==> ttc >= 0;
+      @ ensures mioVelocity < 0 ==> ttc <= 0;
       @ ensures this.\inv;
       @*/
     void ttcCalculation() {
         int headway = this.mioDistance - headwayOffset < 0 ? 0 : this.mioDistance - headwayOffset;
         int abs = this.mioVelocity < 0 ? -(this.mioVelocity) : this.mioVelocity;
         int signum = this.mioVelocity < 0 ? -1 : 1;
-        int clamped = clamp(10, abs, 150);
+        int clamped = clamp(10, abs, 150); // 00.1 and 100 in matlab
         int ttc = headway / clamped;
 
         this.ttc = ttc * signum;
