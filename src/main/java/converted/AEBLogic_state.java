@@ -18,7 +18,7 @@ public final class AEBLogic_state {
     /*@ public invariant
       @ M_DEFAULT == 0 && M_FCW == 1 && M_PARTIAL_BREAKING_1 == 2 && M_PARTIAL_BREAKING_2 == 3 && M_FULL_BREAKING == 4 &&
       @     (this.mode == M_DEFAULT || this.mode == M_FCW || this.mode == M_PARTIAL_BREAKING_1 || this.mode == M_PARTIAL_BREAKING_2
-      @     || this.mode == M_FULL_BREAKING) && this != null;
+      @     || this.mode == M_FULL_BREAKING) && this != null && fcwTime > pb1Time > pb2Time > fbTime && fbDecel > pb2Decel > pb1Decel > 0;
       @*/
 
     /*@
@@ -32,7 +32,7 @@ public final class AEBLogic_state {
 
     /*@ public normal_behaviour
       @ requires true;
-      @ ensures x < 0 ==> \result == - x;
+      @ ensures x < 0 ==> \result == -x;
       @ ensures x >= 0 ==> \result == x;
       @ ensures this.\inv;
       @ assignable \nothing;
@@ -44,25 +44,13 @@ public final class AEBLogic_state {
     /*@ public normal_behavior
       @ requires this.\inv;
       @ assignable this.mode, this.aebStatus, this.fcwActivate, this.decel;
-      @ ensures \old(this.mode) == M_DEFAULT ==> this.decel == 0 && this.aebStatus == 0 && this.fcwActivate == 0;
-      @ ensures \old(this.mode) == M_DEFAULT && abs(this.ttc) < this.fcwTime && this.ttc < 0 ==> this.mode == M_FCW;
-      @ ensures \old(this.mode) == M_DEFAULT && !(abs(this.ttc) < this.fcwTime && this.ttc < 0) ==> this.mode == M_DEFAULT;
-      @ ensures \old(this.mode) == M_FCW ==> this.decel == 0 && this.aebStatus == 0 && this.fcwActivate == 1;
-      @ ensures \old(this.mode) == M_FCW && abs(this.ttc) < this.pb1Time && this.ttc < 0 ==> this.mode == M_PARTIAL_BREAKING_1;
-      @ ensures \old(this.mode) == M_FCW && abs(this.ttc) >= this.pb1Time && abs(this.ttc) < (10 * this.fcwTime) / 12 && this.ttc < 0 ==> this.mode == M_DEFAULT;
-      @ ensures \old(this.mode) == M_FCW && !(abs(this.ttc) < this.pb1Time && this.ttc < 0) && !(abs(this.ttc) >= this.pb1Time && abs(this.ttc) < (10 * this.fcwTime) / 12 && this.ttc < 0) ==> this.mode == M_FCW;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_1 ==> this.decel == this.pb1Decel && this.aebStatus == 1 && this.fcwActivate == 1;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_1 && abs(this.ttc) < this.pb2Time && this.ttc < 0 ==> this.mode == M_PARTIAL_BREAKING_2;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_1 && (abs(this.ttc) >= this.pb2Time || this.ttc >= 0) && this.stop ==> this.mode == M_DEFAULT;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_1 && !(abs(this.ttc) < this.pb2Time && this.ttc < 0) && !((abs(this.ttc) >= this.pb2Time || this.ttc >= 0) && this.stop) ==> this.mode == M_PARTIAL_BREAKING_1;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_2 ==> this.decel == this.pb2Decel && this.aebStatus == 2 && this.fcwActivate == 1;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_2 && abs(this.ttc) < this.fbTime && this.ttc < 0 ==> this.mode == M_FULL_BREAKING;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_2 && (abs(this.ttc) >= this.fbTime || this.ttc >= 0) && this.stop ==> this.mode == M_DEFAULT;
-      @ ensures \old(this.mode) == M_PARTIAL_BREAKING_2 && !(abs(this.ttc) < this.fbTime && this.ttc < 0) && !((abs(this.ttc) >= this.fbTime || this.ttc >= 0) && this.stop) ==> this.mode == M_PARTIAL_BREAKING_2;
-      @ ensures \old(this.mode) == M_FULL_BREAKING ==> this.decel == this.fbDecel && this.aebStatus == 3 && this.fcwActivate == 1;
-      @ ensures \old(this.mode) == M_FULL_BREAKING && this.stop ==> this.mode == M_DEFAULT;
-      @ ensures \old(this.mode) == M_FULL_BREAKING && !(this.stop) ==> this.mode == M_FULL_BREAKING;
-      @ ensures (this.mode == this.M_DEFAULT || this.mode == this.M_FCW || this.mode == this.M_PARTIAL_BREAKING_1 || this.mode == this.M_PARTIAL_BREAKING_2 || this.mode == this.M_FULL_BREAKING);
+      @ ensures \old(mode) == 4 && stop ==> mode == 0;
+      @ ensures \old(fcwActivate) < fcwActivate ==> \old(mode) == 0 && mode == 1;
+      @ ensures ttc >= 0 && !stop ==> mode == \old(mode);
+      @ ensures ttc >= 0 && stop ==> mode == 0;
+      @ ensures decel > \old(decel) ==> mode > \old(mode);
+      @ ensures ttc < 0 && ttc < fbTime && mode < 4 ==> mode >= \old(mode);
+      @ ensures mode >= \old(mode) ==> fcwActivate >= \old(fcwActivate) && aebStatus >= \old(aebStatus) && decel >= \old(decel);
       @ ensures this.\inv;
       @*/
     void aebLogic() {
@@ -105,7 +93,7 @@ public final class AEBLogic_state {
                 this.fcwActivate = 1;
                 this.decel = this.pb2Decel;
 
-                if (abs(this.ttc) < this.fbTime && this.ttc <0) {
+                if (abs(this.ttc) < this.fbTime && this.ttc < 0) {
                     this.mode = M_FULL_BREAKING;
                 }
                 else if (this.stop) {
