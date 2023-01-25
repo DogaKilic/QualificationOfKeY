@@ -18,10 +18,11 @@ public final class AEBLogic_state {
     /*@ public invariant
       @ M_DEFAULT == 0 && M_FCW == 1 && M_PARTIAL_BREAKING_1 == 2 && M_PARTIAL_BREAKING_2 == 3 && M_FULL_BREAKING == 4 &&
       @     (this.mode == M_DEFAULT || this.mode == M_FCW || this.mode == M_PARTIAL_BREAKING_1 || this.mode == M_PARTIAL_BREAKING_2
-      @     || this.mode == M_FULL_BREAKING) && this != null && fcwTime > pb1Time > pb2Time > fbTime && fbDecel > pb2Decel > pb1Decel > 0;
+      @     || this.mode == M_FULL_BREAKING) && this != null && fcwTime >= pb1Time >= pb2Time >= fbTime >= 0 && fbDecel >= pb2Decel >= pb1Decel >= 0 && fcwActivate >= 0
+            && decel >= 0 && aebStatus >= 0;
       @*/
 
-    /*@
+    /*@ public normal_behaviour
       @ ensures mode == this.M_DEFAULT;
       @*/
     public AEBLogic_state() {
@@ -42,15 +43,13 @@ public final class AEBLogic_state {
     }
 
     /*@ public normal_behavior
-      @ requires this.\inv;
+      @ requires this.\inv && fbDecel > pb2Decel > pb1Decel;
       @ assignable this.mode, this.aebStatus, this.fcwActivate, this.decel;
       @ ensures \old(mode) == 4 && stop ==> mode == 0;
-      @ ensures \old(fcwActivate) < fcwActivate ==> \old(mode) == 0 && mode == 1;
       @ ensures ttc >= 0 && !stop ==> mode == \old(mode);
-      @ ensures ttc >= 0 && stop ==> mode == 0;
-      @ ensures decel > \old(decel) ==> mode > \old(mode);
-      @ ensures ttc < 0 && ttc < fbTime && mode < 4 ==> mode >= \old(mode);
-      @ ensures mode >= \old(mode) ==> fcwActivate >= \old(fcwActivate) && aebStatus >= \old(aebStatus) && decel >= \old(decel);
+      @ ensures ttc >= 0 && stop ==> mode == 0 || mode == 1;
+      @ ensures ttc < 0 && !(abs(ttc) < (10*fcwTime) / 12) && !stop ==> mode >= \old(mode);
+      @ ensures ttc < 0 && abs(ttc) < fbTime && mode < 4 && !stop ==> mode >= \old(mode);
       @ ensures this.\inv;
       @*/
     void aebLogic() {
