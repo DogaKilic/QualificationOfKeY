@@ -46,7 +46,7 @@ public final class TTCCalculation_state {
       @ assignable this.collision, this.ttc;
       @ ensures collision == 10 * (mioDistance - 3) < 1 ? true : false;
       @ ensures (mioVelocity >= 0) ==> (ttc >= 0);
-      @ //ensures mioVelocity < 0 ==> ttc <= 0;
+      @ ensures mioVelocity < 0 ==> ttc <= 0;
       @ ensures this.\inv;
       @*/
     void ttcCalculation() {
