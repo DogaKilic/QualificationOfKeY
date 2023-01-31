@@ -9,14 +9,15 @@ public final class StoppingTimeCalculation_state {
     int FCWStoppingTime, PB1StoppingTime, PB2StoppingTime, FBStoppingTime;
 
     /*@ public invariant
-      @ reactTime == 2 && 0 < FB1decel <= FB2decel <= FBdecel;
+      @ reactTime == 2 && 0 < FB1decel <= FB2decel <= FBdecel && reactTime >= egoVelocity / FB1decel;
       @*/
 
     /*@ normal_behavior
       @ requires this.\inv;
       @ assignable this.FBStoppingTime, this.PB1StoppingTime, this.PB2StoppingTime, this.FCWStoppingTime;
-      @ //ensures this.egoVelocity >= 0 ==> this.PB1StoppingTime >= this.PB2StoppingTime >= this.FBStoppingTime;
-      @ //ensures this.egoVelocity < 0 ==> this.PB1StoppingTime <= this.PB2StoppingTime <= this.FBStoppingTime;
+      @ ensures this.egoVelocity >= 0 ==> this.PB1StoppingTime >= this.PB2StoppingTime >= this.FBStoppingTime;
+      @ ensures this.egoVelocity <= 0 ==> this.PB1StoppingTime <= this.PB2StoppingTime <= this.FBStoppingTime;
+      @ ensures this.egoVelocity >= 0 ==> FCWStoppingTime >= PB1StoppingTime;
       @ ensures this.\inv;
       @*/
     void stoppingTimeCalculation() {
