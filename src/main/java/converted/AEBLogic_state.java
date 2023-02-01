@@ -47,7 +47,7 @@ public final class AEBLogic_state {
       @ assignable this.mode, this.aebStatus, this.fcwActivate, this.decel;
       @ ensures \old(mode) == 4 && stop ==> mode == 0;
       @ ensures ttc >= 0 && !stop ==> mode == \old(mode);
-      @ ensures ttc >= 0 && stop ==> mode == 0 || mode == 1;
+      @ ensures ttc >= 0 && stop ==> (mode == 0 || mode == 1);
       @ ensures ttc < 0 && !(abs(ttc) < (10*fcwTime) / 12) && !stop ==> mode >= \old(mode);
       @ ensures ttc < 0 && abs(ttc) < fbTime && mode < 4 && !stop ==> mode >= \old(mode);
       @ ensures this.\inv;

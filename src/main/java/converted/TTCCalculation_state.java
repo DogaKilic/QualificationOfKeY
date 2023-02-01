@@ -22,7 +22,7 @@ public final class TTCCalculation_state {
       @ ensures x == y ==> \result == x && \result == y;
       @ assignable \nothing;
       @*/
-    private int min(int x, int y) { return x < y ? x : y; }
+    private int /*@ strictly_pure @*/ min(int x, int y) { return x < y ? x : y; }
     /*@ public normal_behaviour
       @ requires true;
       @ ensures x > y ==> \result == x;
@@ -30,7 +30,7 @@ public final class TTCCalculation_state {
       @ ensures y == x ==> \result == x && \result == y;
       @ assignable \nothing;
       @*/
-    private int max(int x, int y) { return x > y ? x : y; }
+    private int /*@ strictly_pure @*/ max(int x, int y) { return x > y ? x : y; }
     /*@ public normal_behavior
       @ requires l <= u;
       @ assignable \nothing;
@@ -39,7 +39,7 @@ public final class TTCCalculation_state {
       @ ensures l < x < u ==> \result == x;
       @ ensures this.\inv;
       @*/
-    private int clamp(int l, int x, int u) { return min(max(x, l), u); }
+    private int /*@ strictly_pure @*/ clamp(int l, int x, int u) { return min(max(x, l), u); }
 
     /*@ public normal_behavior
       @ requires this.\inv;
